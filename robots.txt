@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sgs-ict-lab.github.io/sitemap.xml
