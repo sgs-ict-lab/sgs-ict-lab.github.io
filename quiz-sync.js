@@ -1,0 +1,5 @@
+import {auth,db,configured,onAuthStateChanged,doc,getDoc,setDoc,serverTimestamp} from './firebase-client.js';
+let user=null;
+function scores(){try{return JSON.parse(localStorage.getItem('sgsQuizResults')||'{}')}catch{return {}}}
+async function sync(){if(!user)return;try{const ref=doc(db,'progress',user.uid),snap=await getDoc(ref);const remote=snap.exists()?snap.data().quizResults||{}:{};const local=scores(),merged={};for(const [key,max] of Object.entries({beginner:8,intermediate:7,advanced:5})){if(key in local||key in remote)merged[key]=Math.max(0,Math.min(max,Math.max(Number(local[key])||0,Number(remote[key])||0)))}await setDoc(ref,{studentId:user.uid,checkpoints:snap.exists()?snap.data().checkpoints||[]:[],quizResults:merged,updatedAt:serverTimestamp()},{merge:true});localStorage.setItem('sgsQuizResults',JSON.stringify(merged))}catch(e){console.warn('Quiz progress sync unavailable',e)}}
+if(configured)onAuthStateChanged(auth,u=>{user=u?.emailVerified?u:null;if(user)sync()});window.addEventListener('sgs-quiz-progress',sync);
